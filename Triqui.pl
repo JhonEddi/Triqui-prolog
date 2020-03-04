@@ -42,7 +42,7 @@ imprimir([E1,E2,E3,E4,E5,E6,E7,E8,E9]):-
 		
 jugador(Tablero,E,Tablero1):-read(P),tachar(P,E,Tablero,Tablero1),imprimir(Tablero1).
 
-tacharValido(E,Tablero,Tablero1):-random(1,10,P),tachar(P,E,Tablero,Tablero1);tacharValido(E,Tablero,Tablero1).
+tacharValido(E,Tablero,Tablero1):-random(1,10,P),tachar(P,E,Tablero,Tablero1).
 
 generarVic([E,v,v,_,_,_,_,_,_],E,P):-random(2,4,P).
 generarVic([E,_,_,v,_,_,v,_,_],E,P):-random(1,3,R),R =:= 1,P is 4;P is 7.
@@ -109,27 +109,31 @@ ganar([_,_,E,_,E,_,v,_,_],E,7).
 ganar([_,_,E,_,v,_,E,_,_],E,5).
 ganar([_,_,v,_,E,_,E,_,_],E,3).
 
+ganarM(Tablero,E,Tablero1):-ganar(Tablero,E,P),tachar(P,E,Tablero,Tablero1),imprimir(Tablero1).
+
+defender(Tablero,E,Tablero1):-estado(Q),Q \= E,ganar(Tablero,Q,P),tachar(P,E,Tablero,Tablero1),imprimir(Tablero1).
+
+generarVicM(Tablero,E,Tablero1):-generarVic(Tablero,E,P),tachar(P,E,Tablero,Tablero1),imprimir(Tablero1).
+
 maquina(Tablero,E,Tablero1):-
 	%la maquina primero intenta ganar
-	ganar(Tablero,E,P),tachar(P,E,Tablero,Tablero1),imprimir(Tablero1);
+	ganarM(Tablero,E,Tablero1),!;
 	
 	%si no puede ganar defiende
-	estado(Q),Q \= E,ganar(Tablero,Q,P),tachar(P,E,Tablero,Tablero1),imprimir(Tablero1);
+	defender(Tablero,E,Tablero1),!;
 	
 	%si no necesita defender,genera una victoria
-	generarVic(Tablero,E,P),tachar(P,E,Tablero,Tablero1),imprimir(Tablero1);
+	generarVicM(Tablero,E,Tablero1),!;
 	
 	%si no se puede generar una victoria, tacha una casilla valida
-	tacharValido(E,Tablero,Tablero1),imprimir(Tablero1).
+	tacharValido(E,Tablero,Tablero1),imprimir(Tablero1),!.
 
 turno(Tablero,1):-
 	write('JUGADOR 1 (o):'),
-	nl,
 	jugador(Tablero,o,Tablero1),
 	\+ ganador(Tablero1,'Jugador 1'),
 	\+ empate(Tablero1),
 	write('JUGADOR 2 (x):'),
-	nl,
 	jugador(Tablero1,x,Tablero2),
 	\+ ganador(Tablero2,'Jugador 2'),
 	\+ empate(Tablero2),
@@ -137,22 +141,18 @@ turno(Tablero,1):-
 
 turno(Tablero,2):-
 	write('JUGADOR 1 (o):'),
-	nl,
 	jugador(Tablero,o,Tablero1),
 	\+ ganador(Tablero1,'Jugador 1'),
 	\+ empate(Tablero1),
-	write('Maquina (x):'),
-	nl,
+	write('Maquina (x):'),nl,
 	maquina(Tablero1,x,Tablero2),
 	\+ ganador(Tablero2,'Maquina'),
 	\+ empate(Tablero2),
 	turno(Tablero2,2).
 
 jugar():-
-	nl,
 	write('Modo de juego? (1: Jugador vs Jugador | 2: Jugador vs Maquina): '),
 	read(Modo),
 	iniciar(Tablero),
-	nl,
 	imprimir(Tablero),
 	turno(Tablero,Modo).
